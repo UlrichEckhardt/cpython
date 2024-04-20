@@ -1762,6 +1762,7 @@ oserror_init(PyOSErrorObject *self, PyObject **p_args,
 #endif
              )
 {
+    PyObject* py_cwd = PyUnicode_FromString("cwd");
     PyObject *args = *p_args;
     Py_ssize_t nargs = PyTuple_GET_SIZE(args);
 
