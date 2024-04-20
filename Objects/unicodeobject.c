@@ -15304,25 +15304,31 @@ config_get_codec_name(wchar_t **config_encoding)
 {
     char *encoding;
     if (encode_wstr_utf8(*config_encoding, &encoding, "stdio_encoding") < 0) {
+        PySys_WriteStderr("encode_wstr_utf8() failed\n");
         return -1;
     }
 
     PyObject *name_obj = NULL;
+    PySys_WriteStderr("looking up codec '%s'\n", encoding);
     PyObject *codec = _PyCodec_Lookup(encoding);
     PyMem_RawFree(encoding);
 
-    if (!codec)
+    if (!codec) {
+        PySys_WriteStderr("codec lookup failed\n");
         goto error;
+    }
 
     name_obj = PyObject_GetAttrString(codec, "name");
     Py_CLEAR(codec);
     if (!name_obj) {
+        PySys_WriteStderr("codec has no name\n");
         goto error;
     }
 
     wchar_t *wname = PyUnicode_AsWideCharString(name_obj, NULL);
     Py_DECREF(name_obj);
     if (wname == NULL) {
+        PySys_WriteStderr("codec name can't be converted to wchar_t\n");
         goto error;
     }
 
@@ -15330,6 +15336,7 @@ config_get_codec_name(wchar_t **config_encoding)
     if (raw_wname == NULL) {
         PyMem_Free(wname);
         PyErr_NoMemory();
+        PySys_WriteStderr("_PyMem_RawWcsdup failed\n");
         goto error;
     }
 

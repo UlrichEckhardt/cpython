@@ -133,6 +133,7 @@ PyObject *_PyCodec_Lookup(const char *encoding)
 
     PyInterpreterState *interp = _PyInterpreterState_GET();
     if (interp->codec_search_path == NULL && _PyCodecRegistry_Init()) {
+        PySys_WriteStderr("codec registry init failed\n");
         return NULL;
     }
 
@@ -141,6 +142,7 @@ PyObject *_PyCodec_Lookup(const char *encoding)
        replaced with underscores. */
     PyObject *v = normalizestring(encoding);
     if (v == NULL) {
+        PySys_WriteStderr("failed to normalize string\n");
         return NULL;
     }
     PyUnicode_InternInPlace(&v);
@@ -148,9 +150,11 @@ PyObject *_PyCodec_Lookup(const char *encoding)
     /* First, try to lookup the name in the registry dictionary */
     PyObject *result;
     if (PyDict_GetItemRef(interp->codec_search_cache, v, &result) < 0) {
+        PySys_WriteStderr("PyDict_GetItemRef failed\n");
         goto onError;
     }
     if (result != NULL) {
+        PySys_WriteStderr("PyDict_GetItemRef failed (v2)\n");
         Py_DECREF(v);
         return result;
     }
@@ -160,6 +164,7 @@ PyObject *_PyCodec_Lookup(const char *encoding)
     if (len < 0)
         goto onError;
     if (len == 0) {
+        PySys_WriteStderr("no codec search paths configured\n");
         PyErr_SetString(PyExc_LookupError,
                         "no codec search functions registered: "
                         "can't find encoding");
@@ -181,6 +186,7 @@ PyObject *_PyCodec_Lookup(const char *encoding)
             continue;
         }
         if (!PyTuple_Check(result) || PyTuple_GET_SIZE(result) != 4) {
+            PySys_WriteStderr("codec search function failure\n");
             PyErr_SetString(PyExc_TypeError,
                             "codec search functions must return 4-tuples");
             Py_DECREF(result);
@@ -189,6 +195,7 @@ PyObject *_PyCodec_Lookup(const char *encoding)
         break;
     }
     if (i == len) {
+        PySys_WriteStderr("unknown encoding\n");
         /* XXX Perhaps we should cache misses too ? */
         PyErr_Format(PyExc_LookupError,
                      "unknown encoding: %s", encoding);
@@ -197,6 +204,7 @@ PyObject *_PyCodec_Lookup(const char *encoding)
 
     /* Cache and return the result */
     if (PyDict_SetItem(interp->codec_search_cache, v, result) < 0) {
+        PySys_WriteStderr("failed to cache result\n");
         Py_DECREF(result);
         goto onError;
     }
