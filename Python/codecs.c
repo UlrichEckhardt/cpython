@@ -154,10 +154,11 @@ PyObject *_PyCodec_Lookup(const char *encoding)
         goto onError;
     }
     if (result != NULL) {
-        PySys_WriteStderr("PyDict_GetItemRef failed (v2)\n");
+        PySys_WriteStderr("codec found in cache\n");
         Py_DECREF(v);
         return result;
     }
+    PySys_WriteStderr("codec not found in cache\n");
 
     /* Next, scan the search functions in order of registration */
     const Py_ssize_t len = PyList_Size(interp->codec_search_path);
